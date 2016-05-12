@@ -1,5 +1,6 @@
 # Project SaveMe
 ## Road accident reporting System
+
 Team STCICTS proudly presents the project “SaveMe” to the Google IO Extended Sri Lanka Hackathon 2016.
 Saveme is a mobile platform solution which can be easily used to avoid risky situations in your life and in order to seek for the necessary support. In this solution, users will be prompted to fill in the necessary details such as age, blood group, residential address etc: and user profiles are created assigning unique user id’s for each user. Google Maps API and Ideamart SMS API are used to develop the mobile solution. In an emergency, user can easily get the help by notifying authorities and user will be supported from the nearest bases to the user. Users are given an ID card containing the user details encoded in a QR code which can be used to inform the details by the assisting parties.
 After successfully registering to use “SaveMe” mobile app a digital ID card will be emailed to the users, which they’ve to print and keep it with them. The digital ID contains user details which are encoded in a QR Code.
@@ -22,7 +23,4 @@ The “SaveMe” mobile app consists the following features.
 
 We believe this will be a beneficial platform and will ease the burden of people during road accidents. 
 
-
-
-
-
+http://icts.stcmount.edu.lk/saveme
