@@ -56,7 +56,7 @@
             android:gravity="bottom"
             android:textAlignment="center"
             android:textSize="19dp"
-            android:src="@drawable/name"
+            android:src="@drawable/myself"
             android:scaleType="fitCenter"
             android:background="#3f51b5"
             android:layout_margin="1dp"/>

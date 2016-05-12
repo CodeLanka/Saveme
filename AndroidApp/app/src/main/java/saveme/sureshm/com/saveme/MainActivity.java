@@ -20,8 +20,11 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.PopupMenu;
 import android.text.InputType;
 import android.view.ContextMenu;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -50,13 +53,38 @@ public class MainActivity extends AppCompatActivity {
     String provider;
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        if (requestCode == 0) {
-            if (resultCode == RESULT_OK) {
-                String contents = intent.getStringExtra("SCAN_RESULT"); // This will contain your scan result
-                report(contents, "", "");
-            }
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.topmenu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(item.getTitle().equals("Logout")){
+
+            SharedPreferences sp=getSharedPreferences("Login", 0);
+            SharedPreferences.Editor Ed=sp.edit();
+            Ed.putString("username","");
+            Ed.putString("hash","");
+            Ed.commit();
+
+            Intent intent = new Intent(getApplicationContext(), Login.class);
+            startActivity(intent);
+            finish();
+
+        } else if(item.getTitle().equals("Website")){
+            String url = "http://saveme.site88.net/";
+            Intent i = new Intent(Intent.ACTION_VIEW);
+            i.setData(Uri.parse(url));
+            startActivity(i);
         }
+        return true;
+    }
+
+    @Override
+    public void onBackPressed() {
+        finish();
     }
 
     @Override
@@ -83,6 +111,22 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
+                AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
+                dialog.setMessage("Your current location will be sent as the accident location");
+                dialog.setPositiveButton("Yes, Report Now", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                        report("","","");
+                    }
+                });
+                dialog.setNegativeButton(getBaseContext().getString(R.string.Cancel), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                        // TODO Auto-generated method stub
+                    }
+                });
+                dialog.show();
+
             }
         });
 
@@ -98,29 +142,23 @@ public class MainActivity extends AppCompatActivity {
         name.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setTitle("Report by person's name");
 
-                final EditText input = new EditText(MainActivity.this);
-                input.setInputType(InputType.TYPE_CLASS_TEXT);
-                builder.setView(input);
-
-                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
+                dialog.setMessage("It means you are currently in a trouble. Are you sure want to proceed?");
+                dialog.setPositiveButton("Yes, Report Now", new DialogInterface.OnClickListener() {
                     @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        String name = input.getText().toString();
-                        report(name, "", "");
+                    public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                        report("","","me");
                     }
                 });
-
-                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                dialog.setNegativeButton(getBaseContext().getString(R.string.Cancel), new DialogInterface.OnClickListener() {
                     @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
+                    public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                        // TODO Auto-generated method stub
+
                     }
                 });
-
-                builder.show();
+                dialog.show();
             }
         });
 
@@ -154,27 +192,92 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        if (requestCode == 0) {
+            if (resultCode == RESULT_OK) {
+
+                String contents = intent.getStringExtra("SCAN_RESULT"); // This will contain your scan result
+                report(contents, "", "");
+
+                PopupMenu popup = new PopupMenu(MainActivity.this,saveme);
+                popup.getMenuInflater().inflate(R.menu.popup, popup.getMenu());
+
+                //registering popup with OnMenuItemClickListener
+
+                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    public boolean onMenuItemClick(MenuItem item) {
+
+                        if(item.getTitle().equals("Inform a relative")){
+
+                        } else if(item.getTitle().equals("Call an ambulance")){
+
+                        } else if(item.getTitle().equals("Call police")){
+
+                        }
+
+                        Toast.makeText(MainActivity.this,"You Clicked : " + item.getTitle(),Toast.LENGTH_SHORT).show();
+                        return true;
+                    }
+                });
+
+                popup.show();
+            }
+        }
+    }
+
     public String report(String scard, String nic, String name) {
         //Get shared prefs
         SharedPreferences sp = getSharedPreferences("Login", 0);
         String reporter = sp.getString("username", "email");
         String reporterhash = sp.getString("hash", "hash");
         String finalloc = "";
+        boolean gps_enabled = false;
+        boolean network_enabled = false;
 
         double latitude, longlat;
         Location location;
 
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {}
+        try {
+            gps_enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        } catch(Exception ex) {}
 
-        location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-        latitude = location.getLatitude();
-        longlat = location.getLongitude();
+        try {
+            network_enabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        } catch(Exception ex) {}
 
-        finalloc = latitude+","+longlat;
+        if(!gps_enabled && !network_enabled) {
+            // notify user
+            AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
+            dialog.setMessage(getBaseContext().getResources().getString(R.string.gps_network_not_enabled));
+            dialog.setPositiveButton(getBaseContext().getResources().getString(R.string.open_location_settings), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                    // TODO Auto-generated method stub
+                    Intent myIntent = new Intent( Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                    startActivity(myIntent);
+                    //get gps
+                }
+            });
+            dialog.setNegativeButton(getBaseContext().getString(R.string.Cancel), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                    // TODO Auto-generated method stub
+                }
+            });
+            dialog.show();
+        } else {
+            location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            latitude = location.getLatitude();
+            longlat = location.getLongitude();
 
-        ProceedReport proceedReport = new ProceedReport();
-        proceedReport.execute(reporter, reporterhash, scard, nic, name, finalloc);
+            finalloc = latitude+","+longlat;
+
+            ProceedReport proceedReport = new ProceedReport();
+            proceedReport.execute(reporter, reporterhash, scard, nic, name, finalloc);
+        }
 
         return null;
     }
@@ -205,7 +308,7 @@ public class MainActivity extends AppCompatActivity {
 
             try{
 
-                String link = "http://192.168.1.8/saveme/client.php?task=report&reporter="+Uri.encode(g_reporter)+"&hash="+Uri.encode(g_reporterhash)+"&savecard="+Uri.encode(g_savemecard)+"&nic="+Uri.encode(g_nic)+"&name="+Uri.encode(g_nane)+"&location="+Uri.encode(g_location);
+                String link = "http://icts.stcmount.edu.lk/saveme/client.php?task=report&reporter="+Uri.encode(g_reporter)+"&hash="+Uri.encode(g_reporterhash)+"&savecard="+Uri.encode(g_savemecard)+"&nic="+Uri.encode(g_nic)+"&name="+Uri.encode(g_nane)+"&location="+Uri.encode(g_location);
                 URL url = new URL(link);
                 HttpClient client = new DefaultHttpClient();
                 HttpGet request = new HttpGet();

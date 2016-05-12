@@ -122,20 +122,23 @@ if($task == "login"){
 		$rows = mysqli_num_rows($q);
 		
 		if($rows == 1){
+			
 			if($_GET["savecard"]){
 				
 				//Check for existing savecard user ID
-				$savecheck = mysqli_query($conn,"SELECT* FROM users WHERE savehash='$savecard'");
+				$savecheck = mysqli_query($conn,"SELECT* FROM users WHERE savehash='".$_GET["savecard"]."';");
 				$saverows = mysqli_num_rows($savecheck);
-				if($rows == 0){
+				if($saverows == 0){
 					$status["message"] = "Invalid SaveMe Card number!";
 				} else {
-					$savecard = $_GET["savecard"];	
+					$savecard = $_GET["savecard"];
+					mysqli_query($conn,"INSERT INTO `reports` (`id`, `reporter`, `saveme`, `nic`, `name`, `location`, `proceed`, `datetime`) VALUES (NULL, '$reporter', '$savecard', '$nic', '$name', '$location', '0', now());");
+					$status["message"] = "success";
 				}
+			} else {
+				mysqli_query($conn,"INSERT INTO `reports` (`id`, `reporter`, `saveme`, `nic`, `name`, `location`, `proceed`, `datetime`) VALUES (NULL, '$reporter', '$savecard', '$nic', '$name', '$location', '0', now());");
+				$status["message"] = "success";
 			}
-			
-			mysqli_query($conn,"INSERT INTO `reports` (`id`, `reporter`, `saveme`, `nic`, `name`, `location`, `proceed`) VALUES (NULL, '$reporter', '$savecard', '$nic', '$name', '$location', '0');");
-			$status["message"] = "success";
 			
 		} else {
 			$status["message"] = "Invalid security token! Please relogin.";	
@@ -145,7 +148,46 @@ if($task == "login"){
 		$status["message"] = "Incomplete request!";
 	}
 	
-} else {
+}  else if($task == "editprofile"){
+	$status = array(
+		"message"	=>	""
+	);
+	
+	$name = $_GET["name"];
+	$password = $_GET["password"];
+	$emergency = $_GET["emergency"];
+	$nic = $_GET["nic"];
+	$blood = $_GET["blood"];
+	
+	//Authentication
+	$email = $_GET["email"];
+	$hash = $_GET["hash"];
+	
+	$query = mysqli_query($conn,"SELECT* FROM users WHERE username='$email' AND hash='$hash'");
+	$rows = mysqli_num_rows($query);
+	
+	if($rows == 1){
+		if(!empty($name)){
+			mysqli_query($conn,"UPDATE users SET fullname='$name' WHERE username='$email';");
+		}
+		if(!empty($password)){
+			$password = md5($password);
+			mysqli_query($conn,"UPDATE users SET password='$password' WHERE username='$email';");
+		}
+		if(!empty($emergency)){
+			mysqli_query($conn,"UPDATE users SET emergencyno='$emergency' WHERE username='$email';");
+		}
+		if(!empty($nic)){
+			mysqli_query($conn,"UPDATE users SET nic='$nic' WHERE username='$email';");
+		}
+		if(!empty($blood)){
+			mysqli_query($conn,"UPDATE users SET bloodgroup='$blood' WHERE username='$email';");
+		}
+		$status["message"] = "success";
+	} else {
+		$status["message"] = "Authentication failed!";
+	}
+}else {
 	$status["message"] = "Invalid request";
 }
 

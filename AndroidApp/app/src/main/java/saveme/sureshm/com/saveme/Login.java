@@ -38,7 +38,17 @@ public class Login extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
+
+        SharedPreferences sp = getSharedPreferences("Login", 0);
+        String reporter = sp.getString("username", "email");
+
+        if(!reporter.isEmpty()){
+            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+            startActivity(intent);
+        } else {
+            setContentView(R.layout.activity_login);
+        }
+
         ButterKnife.inject(this);
 
         login.setOnClickListener(new View.OnClickListener() {
@@ -122,7 +132,7 @@ public class Login extends AppCompatActivity {
             String password_in = params[1];
 
             try{
-                String link = "http://192.168.1.8/saveme/client.php?task=login&username="+Uri.encode(email_in)+"&password="+Uri.encode(password_in);
+                String link = "http://icts.stcmount.edu.lk/saveme/client.php?task=login&username="+Uri.encode(email_in)+"&password="+Uri.encode(password_in);
                 URL url = new URL(link);
                 HttpClient client = new DefaultHttpClient();
                 HttpGet request = new HttpGet();
@@ -161,6 +171,7 @@ public class Login extends AppCompatActivity {
                 //Open Main Activity
                 Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                 startActivity(intent);
+                //finish();
 
             } else {
                 Toast.makeText(Login.this, s, Toast.LENGTH_LONG).show();

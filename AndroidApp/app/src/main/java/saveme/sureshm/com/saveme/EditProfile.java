@@ -135,7 +135,7 @@ public class EditProfile extends AppCompatActivity {
             String hash = params[6];
 
             try{
-                String link = "http://192.168.1.8/saveme/client.php?task=editprofile&email="+Uri.encode(username)+"&hash="+Uri.encode(hash)+"&name="+Uri.encode(name)+"&password="+Uri.encode(password)+"&emergency="+Uri.encode(emergency)+"&nic="+Uri.encode(nic)+"&blood="+Uri.encode(blood);
+                String link = "http://icts.stcmount.edu.lk/saveme/client.php?task=editprofile&email="+Uri.encode(username)+"&hash="+Uri.encode(hash)+"&name="+Uri.encode(name)+"&password="+Uri.encode(password)+"&emergency="+Uri.encode(emergency)+"&nic="+Uri.encode(nic)+"&blood="+Uri.encode(blood);
                 URL url = new URL(link);
                 HttpClient client = new DefaultHttpClient();
                 HttpGet request = new HttpGet();

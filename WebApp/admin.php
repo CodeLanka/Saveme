@@ -45,8 +45,9 @@ echo $privilege;
   <table class="table">
    	<tr>
     	<th width="15%">Datetime</th>
-        <th width="25%">Victim Name</th>
-        <th width="35%">Location</th>
+        <th width="20%">Victim Name</th>
+        <th width="30%">Location</th>
+       	<th width="10%">Reported by</th>
         <th width="25%">Process</th>
     </tr>
     <?php
@@ -125,10 +126,10 @@ echo $privilege;
     <tr>
     	<td><?php echo $data["datetime"] ?></td>
         <td><?php echo $person_name; ?></td>
-        <td><?php echo getLocation($data["location"]); ?><br/><a href="http://maps.google.com/?q=<?php echo $data["location"] ?>">Click to View</a></td>
+        <td><?php echo getLocation($data["location"]); ?><br/><a target="_blank" href="http://maps.google.com/?q=<?php echo $data["location"] ?>">Click to View in map</a></td>
+        <td><?php echo $data["reporter"] ?></td>
         <td>
         	<a href="admin.php?reqamb=<?php echo $data["id"] ?>&coords=<?php echo $data["location"] ?>">Request Ambulance</a><br/>
-        	<a href="admin.php?relative=<?php echo $data["id"] ?>&coords=<?php echo $data["location"] ?>">Inform his relatives</a><br/>
             <a href="admin.php?police=<?php echo $data["id"] ?>&coords=<?php echo $data["location"] ?>">Inform Police</a><br/>
             <a href="admin.php?remove=<?php echo $data["id"] ?>">Remove Accident</a>
         </td>
