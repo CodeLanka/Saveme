@@ -6,8 +6,11 @@ After successfully registering to use “SaveMe” mobile app a digital ID card 
 User or the reporting party is provided the following options to report/inform to the necessary authorities.
 
 •	SaveMe ID Card (Scan the QR code on ID card)
+
 •	NIC No (Enter the NIC No)
+
 •	Save MySelf (One tap button)
+
 •	I don’t have any information (Location coordinates)
 
 The “SaveMe” mobile app consists the following features.
