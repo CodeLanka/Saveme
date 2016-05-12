@@ -123,21 +123,28 @@ if($task == "login"){
 		
 		if($rows == 1){
 			
-			if($_GET["savecard"]){
+			if($_GET["name"] == "me"){
+				$qdata = mysqli_fetch_array($q);
+				$mysavecard = $qdata["savehash"];
+				mysqli_query($conn,"INSERT INTO `reports` (`id`, `reporter`, `saveme`, `nic`, `name`, `location`, `proceed`, `datetime`) VALUES (NULL, '$reporter', '$mysavecard', '', '', '$location', '0', now());");
+				$status["message"] = "success";
+			} else {
+				if($_GET["savecard"]){
 				
-				//Check for existing savecard user ID
-				$savecheck = mysqli_query($conn,"SELECT* FROM users WHERE savehash='".$_GET["savecard"]."';");
-				$saverows = mysqli_num_rows($savecheck);
-				if($saverows == 0){
-					$status["message"] = "Invalid SaveMe Card number!";
+					//Check for existing savecard user ID
+					$savecheck = mysqli_query($conn,"SELECT* FROM users WHERE savehash='".$_GET["savecard"]."';");
+					$saverows = mysqli_num_rows($savecheck);
+					if($saverows == 0){
+						$status["message"] = "Invalid SaveMe Card number!";
+					} else {
+						$savecard = $_GET["savecard"];
+						mysqli_query($conn,"INSERT INTO `reports` (`id`, `reporter`, `saveme`, `nic`, `name`, `location`, `proceed`, `datetime`) VALUES (NULL, '$reporter', '$savecard', '$nic', '$name', '$location', '0', now());");
+						$status["message"] = "success";
+					}
 				} else {
-					$savecard = $_GET["savecard"];
 					mysqli_query($conn,"INSERT INTO `reports` (`id`, `reporter`, `saveme`, `nic`, `name`, `location`, `proceed`, `datetime`) VALUES (NULL, '$reporter', '$savecard', '$nic', '$name', '$location', '0', now());");
 					$status["message"] = "success";
 				}
-			} else {
-				mysqli_query($conn,"INSERT INTO `reports` (`id`, `reporter`, `saveme`, `nic`, `name`, `location`, `proceed`, `datetime`) VALUES (NULL, '$reporter', '$savecard', '$nic', '$name', '$location', '0', now());");
-				$status["message"] = "success";
 			}
 			
 		} else {
