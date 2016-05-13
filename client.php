@@ -194,10 +194,107 @@ if($task == "login"){
 	} else {
 		$status["message"] = "Authentication failed!";
 	}
+} else if($task == "call"){
+	
+	include "WebApp/libs/sms/SmsSender.php";
+	
+	$status = array(
+		"message"	=>	""
+	);
+	
+	$reqtype = $_GET["type"];
+	$location = $_GET["location"];
+	$savecardhash = $_GET["savehash"];
+	
+	if($reqtype == "relative"){
+		
+		$emergency_q = mysqli_query($conn,"SELECT* FROM users WHERE savehash='$savecardhash'");
+		$emer_data = mysqli_fetch_array($emergency_q);
+		
+		if(!empty($emer_data["emergencyno"])){
+			
+			$messagebody = "Your relative".$emer_data["fullname"]." has faced an accident near ".getLocation($location);
+			
+			// Create the sender object server url
+			$sender = new SmsSender("https://api.dialog.lk/sms/send");
+			
+			//sending a one message
+			$applicationId = "APP_021670";
+			$encoding = "0";
+			$version =  "1.0";
+			$password = "password";
+			$sourceAddress = "77100";
+			$deliveryStatusRequest = "1";
+			$charging_amount = ":15.75";
+			$destinationAddresses = array("tel:".$emer_data["emergencyno"]);
+			$binary_header = "";
+			$res = $sender->sms($messagebody, $destinationAddresses, $password, $applicationId, $sourceAddress, $deliveryStatusRequest, $charging_amount, $encoding, $version, $binary_header);
+		
+			$status["message"] = "Successfully sent a message to his/her relative.";
+				
+		} else {
+			$status["message"] = "This user has not set up an emergency number!";	
+		}
+		
+	} else if($reqtype == "ambulance"){
+		
+			$messagebody = "Please send an ambulance near ".getLocation($location);
+			
+			// Create the sender object server url
+			$sender = new SmsSender("https://api.dialog.lk/sms/send");
+			
+			//sending a one message
+			$applicationId = "APP_021670";
+			$encoding = "0";
+			$version =  "1.0";
+			$password = "password";
+			$sourceAddress = "77100";
+			$deliveryStatusRequest = "1";
+			$charging_amount = ":15.75";
+			$destinationAddresses = array("942540020");
+			$binary_header = "";
+			$res = $sender->sms($messagebody, $destinationAddresses, $password, $applicationId, $sourceAddress, $deliveryStatusRequest, $charging_amount, $encoding, $version, $binary_header);
+		
+			$status["message"] = "Successfully sent a message to the ambulance service.";
+		
+	} else if($reqtype == "police"){
+		
+			$messagebody = "Theres an accident near ".getLocation($location);
+			
+			// Create the sender object server url
+			$sender = new SmsSender("https://api.dialog.lk/sms/send");
+			
+			//sending a one message
+			$applicationId = "APP_021670";
+			$encoding = "0";
+			$version =  "1.0";
+			$password = "password";
+			$sourceAddress = "77100";
+			$deliveryStatusRequest = "1";
+			$charging_amount = ":15.75";
+			$destinationAddresses = array("942540020");
+			$binary_header = "";
+			$res = $sender->sms($messagebody, $destinationAddresses, $password, $applicationId, $sourceAddress, $deliveryStatusRequest, $charging_amount, $encoding, $version, $binary_header);
+		
+			$status["message"] = "Successfully sent a message to the police.";
+		
+	}
+	
 }else {
 	$status["message"] = "Invalid request";
 }
 
 echo(json_encode($status));
 
+
+function getLocation($coords){
+	$url = "http://maps.googleapis.com/maps/api/geocode/json?latlng=".$coords."&sensor=false";
+	// Make the HTTP request
+	$data = @file_get_contents($url);
+	// Parse the json response
+	$jsondata = json_decode($data,true);
+		
+	$address = $jsondata["results"][0]["formatted_address"];
+	return $address;
+}
 ?>
