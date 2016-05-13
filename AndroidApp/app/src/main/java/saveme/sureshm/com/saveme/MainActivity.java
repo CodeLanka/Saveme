@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
     ImageButton saveme, nic, name, other;
     Button editprofile;
     LocationManager locationManager;
-    String provider;
+    String provider, qrcode;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
             finish();
 
         } else if(item.getTitle().equals("Website")){
-            String url = "http://saveme.site88.net/";
+            String url = "http://icts.stcmount.edu.lk/saveme/";
             Intent i = new Intent(Intent.ACTION_VIEW);
             i.setData(Uri.parse(url));
             startActivity(i);
@@ -196,33 +196,119 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         if (requestCode == 0) {
             if (resultCode == RESULT_OK) {
-
                 String contents = intent.getStringExtra("SCAN_RESULT"); // This will contain your scan result
+                qrcode = contents;
                 report(contents, "", "");
-
-                PopupMenu popup = new PopupMenu(MainActivity.this,saveme);
-                popup.getMenuInflater().inflate(R.menu.popup, popup.getMenu());
-
-                //registering popup with OnMenuItemClickListener
-
-                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                    public boolean onMenuItemClick(MenuItem item) {
-
-                        if(item.getTitle().equals("Inform a relative")){
-
-                        } else if(item.getTitle().equals("Call an ambulance")){
-
-                        } else if(item.getTitle().equals("Call police")){
-
-                        }
-
-                        Toast.makeText(MainActivity.this,"You Clicked : " + item.getTitle(),Toast.LENGTH_SHORT).show();
-                        return true;
-                    }
-                });
-
-                popup.show();
             }
+        }
+    }
+
+    public String inform(String type, String savemehash){
+
+        //Get shared prefs
+        SharedPreferences sp = getSharedPreferences("Login", 0);
+        String finalloc = "";
+        boolean gps_enabled = false;
+        boolean network_enabled = false;
+
+        double latitude, longlat;
+        Location location;
+
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {}
+        try {
+            gps_enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        } catch(Exception ex) {}
+
+        try {
+            network_enabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        } catch(Exception ex) {}
+
+        if(!gps_enabled && !network_enabled) {
+            // notify user
+            AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
+            dialog.setMessage(getBaseContext().getResources().getString(R.string.gps_network_not_enabled));
+            dialog.setPositiveButton(getBaseContext().getResources().getString(R.string.open_location_settings), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                    // TODO Auto-generated method stub
+                    Intent myIntent = new Intent( Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                    startActivity(myIntent);
+                    //get gps
+                }
+            });
+            dialog.setNegativeButton(getBaseContext().getString(R.string.Cancel), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                    // TODO Auto-generated method stub
+                }
+            });
+            dialog.show();
+        } else {
+            location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            latitude = location.getLatitude();
+            longlat = location.getLongitude();
+
+
+            finalloc = latitude+","+longlat;
+
+
+            ProceedRequest proceedRequest = new ProceedRequest();
+            proceedRequest.execute(type,savemehash,finalloc);
+        }
+
+        return null;
+    }
+
+    class ProceedRequest extends AsyncTask<String, String, String> {
+
+        private ProgressDialog reportprogress;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            reportprogress = new ProgressDialog(MainActivity.this);
+            reportprogress.setIndeterminate(true);
+            reportprogress.setMessage("Reporting...");
+            reportprogress.show();
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+
+            String reqtype = params[0];
+            String reqsavehash = params[1];
+            String reqloc = params[2];
+
+            try{
+
+                String link = "http://icts.stcmount.edu.lk/saveme/client.php?task=call&type="+reqtype+"&savehash="+reqsavehash+"&location="+reqloc;
+                URL url = new URL(link);
+                HttpClient client = new DefaultHttpClient();
+                HttpGet request = new HttpGet();
+                request.setURI(new URI(link));
+                HttpResponse response = client.execute(request);
+                BufferedReader in = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+
+                String json = in.readLine();
+                JSONObject jsonObject = new JSONObject(json);
+                String message = jsonObject.getString("message");
+
+                return message;
+            }
+
+            catch(Exception e){
+                return e.toString();
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+
+            Toast.makeText(MainActivity.this, s, Toast.LENGTH_LONG).show();
+
+            reportprogress.dismiss();
         }
     }
 
@@ -282,7 +368,6 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 
-
     class ProceedReport extends AsyncTask<String, String, String> {
 
         private ProgressDialog reportprogress;
@@ -333,6 +418,33 @@ public class MainActivity extends AppCompatActivity {
             super.onPostExecute(s);
 
             Toast.makeText(MainActivity.this, s, Toast.LENGTH_LONG).show();
+
+
+            if(s.equals("success") && !qrcode.isEmpty()){
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+
+                builder.setTitle("What do you want to do now?");
+
+                builder.setItems(new CharSequence[] {"Inform a relative", "Call an ambulance", "Call police service"} ,
+                        new DialogInterface.OnClickListener()
+                        {
+                            public void onClick(DialogInterface dialog, int which) {
+                                switch (which){
+                                    case 0:
+                                        MainActivity.this.inform("relative",qrcode);
+                                        break;
+                                    case 1:
+                                        MainActivity.this.inform("ambulance",qrcode);
+                                        break;
+                                    case 2:
+                                        MainActivity.this.inform("police",qrcode);
+                                        break;
+                                }
+                            }
+                        });
+                builder.show();
+            }
+
             reportprogress.dismiss();
         }
     }

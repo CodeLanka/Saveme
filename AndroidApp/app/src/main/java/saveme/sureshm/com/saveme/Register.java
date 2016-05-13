@@ -123,7 +123,7 @@ public class Register extends AppCompatActivity {
 
             if(s.equalsIgnoreCase("success")){
 
-                Toast.makeText(getBaseContext(), "You have been successfull registered! Please check your email for SaveMe ID", Toast.LENGTH_LONG).show();
+                Toast.makeText(getBaseContext(), "You have been successfull registered! Please collect your SaveMe card from the nearest SaveMe agency!", Toast.LENGTH_LONG).show();
 
                 Intent intent = new Intent(getApplicationContext(), Login.class);
                 startActivity(intent);
